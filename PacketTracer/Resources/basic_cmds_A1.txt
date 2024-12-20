@@ -1,0 +1,182 @@
+enable
+conf t
+int g0/0
+ip address 192.168.10.1 255.255.255.0
+no shutdown 
+
+int g0/1
+ip address 192.168.20.1 255.255.255.0
+no shutdown
+
+
+=======================
+192.168.10.2		192.168.10.3
+192.168.20.2		192.168.20.3
+
+=========================
+Vlan creation
+-----------
+en
+conf t
+
+vlan 10
+name CSE
+
+vlan 20
+name ME
+
+------------------
+show vlan brief
+-----------
+config
+====================
+int f0/1
+switchport mode access
+switchport access vlan 10
+end
+
+conf t
+int f0/2
+switchport mode access
+switchport access vlan 20
+end
+
+conf t
+int g0/1
+switchport mode trunk
+switchport trunk allowed vlan 10,20,1
+end
+
+=========================================
+
+en
+conf t
+
+vlan 10
+name CSE
+
+vlan 20
+name ME
+
+int f0/1
+switchport mode access
+switchport access vlan 10
+end
+
+conf t
+int f0/2
+switchport mode access
+switchport access vlan 20
+end
+
+conf t
+int g0/1
+switchport mode trunk
+switchport trunk allowed vlan 10,20,1
+end
+
+
+----------
+router
+
+en
+conf t
+int  g0/0.10
+encapsulation dot1q 10
+ip address 192.168.10.1 255.255.255.0
+
+int g0/0.20
+encap dot1q 20
+ip address 192.168.20.1 255.255.255.0
+
+int g0/0
+no shutdown
+
+
+
+
+
+CLASS
+======================================================================
+
+192.168.1.0 / 24 ---> 255.255.255.0
+
+
+enable
+configure terminal
+
+en
+conf t
+
+interface g0/0
+ip address 192.168.1.1 255.255.255.0
+no shutdown
+
+
+
+interface g0/1
+ip address 192.168.2.1 255.255.255.0
+no shutdown
+
+
+
+=============
+SWITCH
+------------
+Vlan declaration
+en
+conf t
+
+vlan 10
+name CSE
+
+vlan 20
+name EEE
+
+
+en
+conf t
+
+vlan 10 -> fa0/1
+vlan 20 -> fa0/2
+
+
+
+conf t
+int f0/1
+switchport mode access
+switchport access vlan 10
+end
+
+
+conf t
+int f0/2
+switchport mode access
+switchport access vlan 20
+end
+
+
+
+conf t
+int g0/1
+switchport mode trunk
+switchport trunk allowed vlan 10,20,1
+end
+
+
+int g0/0.10
+encapsulation dot1q 10
+ip address 192.168.10.1 255.255.255.0
+ 
+
+int g0/0.20
+encapsulation dot1q 20
+ip address 192.168.20.1 255.255.255.0
+
+int g0/0
+no shutdown
+
+
+
+
+

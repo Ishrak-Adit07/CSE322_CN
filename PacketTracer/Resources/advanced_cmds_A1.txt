@@ -1,0 +1,163 @@
+
+----------------NAT Demo-------------------------
+
+NAT Router------------------
+
+enable
+conf t
+int g0/0
+ip address 192.168.10.1 255.255.255.0
+no shutdown 
+
+int g0/1
+ip address 192.168.20.1 255.255.255.0
+no shutdown
+
+next router:
+
+int g0/0
+ip address 100.10.10.1 255.255.255.0
+no shutdown 
+
+Serial DCE-------------------
+100.2.2.0/30
+Point-to-point link
+
+int s0/0/0
+ip address 100.2.2.1 255.255.255.252
+clock rate 64000
+no shutdown
+
+int s0/0/0
+ip address 100.2.2.2 255.255.255.252
+no shutdown
+
+Servers----------------------
+100.10.10.0/24
+setup default route and interface ip
+
+
+static routing---------------
+NAT Router
+ip route 0.0.0.0 0.0.0.0 s0/0/0
+R2
+ip route 0.0.0.0 0.0.0.0 s0/0/0
+
+Dynamic NAT--------------------
+
+int g0/0
+ip nat inside
+int g0/1
+ip nat inside
+int s0/0/0
+ip nat outside
+
+ip nat pool BUETpool 209.175.200.5 209.175.200.10 netmask 255.255.255.224
+access-list 1 permit 192.168.10.0 0.0.0.255
+access-list 1 permit 192.168.20.0 0.0.0.255
+ip nat inside source list 1 pool BUETpool
+
+ip nat inside source list 1 pool BUETpool overload
+
+**
+show running-config | include ip nat
+
+** show ip nat translations 
+** clear ip nat translation *
+
+show ip nat statistics
+clear ip nat statistics
+
+
+Transport layer port numbers 
+
+
+ACL-------------------------------
+Router --> per interface --> inbound, outbound (EXPLAIN) * IPv4, IPv6
+Standard ACL --> Src IP only, apply at dest
+Extended --> Destn Also, port, tc/udp, apply at source
+
+wildcard Example: 192.168.10.64 0.0.0.15 ==> 64 to 79
+
+
+Standard ACL: 1-99 -> src address, closest to the destination (no dest info so manually place at dest)
+
+============ Numbered ACL ===================
+define:
+access-list 10 permit host 192.168.10.2  ==> access-list 10 permit 192.168.10.2 0.0.0.0
+access-list 10 deny 192.168.10.0 0.0.0.255
+access-list 10 deny any (implicit/optional)
+
+apply:
+int s0/0/0
+ip access-group 10 out
+
+** no access-list 10
+** no ip access-group 10 out
+** do show access-lists
+** show run | section access-list
+============ Named ACL ==================== (must menton standard/extended, since no implicit number)
+
+
+define:
+ip access-list standard permit-access
+permit host 192.168.10.2
+deny 192.168.10.0 0.0.0.255
+permit 192.168.20.0 0.0.0.255
+
+apply:
+int s0/0/0
+ip access-group permit-access out
+
+
+host *ip*
+same as
+*ip* 0.0.0.0
+
+
+Extended ACL: 100-199-> src IP, dest IP, port, closest to the source
+
+
+ip access-list extended FILTER-CSE
+permit tcp 192.168.10.0 0.0.0.255 host 100.10.10.2 eq www
+deny tcp 192.168.10.0 0.0.0.255 host 100.10.10.3 eq ftp
+permit ip any any
+
+int g0/0
+ip access-group FILTER-CSE in
+
+ip access-list extended FILTER-ME
+permit tcp 192.168.20.0 0.0.0.255 host 100.10.10.3 eq ftp
+deny tcp 192.168.20.0 0.0.0.255 host 100.10.10.2 eq www
+permit ip any any
+
+int g0/1
+ip access-group FILTER-ME in
+
+
+
+
+ftp 100.10.10.3
+web browser: 100.10.10.2
+
+** no ip access-list extended FILTER
+** show access-lists
+** show run
+** show ip int serial 0/0/0 | include access-list
+
+
+
+
+/24 ==> 111..111 XXXXXXXX ==> 00000000, 11111111
+/31 ==> 111111111111..11  X 
+/30 ==> point to point ==>                 00, 11, 01, 10
+
+
+
+
+
+
+
+
+
+
